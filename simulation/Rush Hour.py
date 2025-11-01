@@ -16,6 +16,7 @@ import sys
 import math
 from tkinter import *
 from tkinter import messagebox
+from aStar.aSolver import performAStar, load_game
 
 Tk().wm_withdraw()  # to hide the main Tkinter window
 
@@ -101,6 +102,21 @@ class game:  # main class
                 messagebox.showinfo('Welcome!',
                                     'Rush Hour\nGet the red car to the end.\n Click and drag to control the cars.')
                 start = False
+
+                # === Automatische Lösung mit A* starten ===
+                from aStar.aSolver import performAStar, load_game
+
+                # Lade den Startzustand als Tupel
+                start_state = tuple(tuple(c) for c in self.carInfos)
+
+                # Berechne die Lösung
+                solution = performAStar(start_state)
+
+                if solution:
+                    messagebox.showinfo("Solver", f"Lösung gefunden in {len(solution) - 1} Zügen!\nStarte Animation...")
+                    self.playSolution(solution)
+                else:
+                    messagebox.showwarning("Solver", "Keine Lösung gefunden.")
 
             self.gameOver()
 
@@ -248,7 +264,7 @@ class game:  # main class
 
     def loadGame(self):  # reading the file
         self.carInfos = []  # list of car information
-        filename = str("game0.txt")  # get 2nd file
+        filename = str("../games/game0.txt")  # get 2nd file
         file = open(filename, 'r')  # open it
         lines = file.readlines()  # save the file to a list
 
@@ -270,6 +286,25 @@ class game:  # main class
             messagebox.showinfo('Congratulations!',
                                 'You have completed the game!\nYou did it in %d moves!' % self.turns)  # victory popup
             self.inGame = False  # cut the loop
+
+    def updateBoard(self, state):
+        for i, (orientation, size, row, column) in enumerate(state):
+            row = int(row)
+            column = int(column)
+            self.rectObjects[i].startX = column * 80
+            self.rectObjects[i].startY = row * 80
+            self.rectObjects[i].rect.x = column * 80
+            self.rectObjects[i].rect.y = row * 80
+
+    def playSolution(self, solution):
+        for state in solution:
+            self.updateBoard(state)
+            pygame.display.get_surface().fill((255, 255, 255))
+            for rect in self.rectObjects:
+                pygame.draw.rect(pygame.display.get_surface(), rect.colour, rect.rect)
+                pygame.draw.rect(pygame.display.get_surface(), (0, 0, 0), rect.rect, 5)
+            pygame.display.flip()
+            pygame.time.wait(400)
 
 
 game()  # initialisre
