@@ -1,0 +1,43 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+.venv/
+env/
+venv/
+
+# PyCharm project files
+.idea/
+
+# macOS system files
+.DS_Store
+
+# Logs and temp files
+*.log
+*.tmp
+
+# Python packaging
+build/
+dist/
+*.egg-info/
+
+# Cache
+.cache/
+*.pyc
+*.pyo
+
+# VSCode / JetBrains backups
+*.iml
+
+# Pygame generated files (if any)
+*.wav
+*.ogg
+*.mp3
+*.png
+*.jpg
+*.jpeg
+
+# Optional: compiled C extensions
+*.so
