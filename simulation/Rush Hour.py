@@ -15,7 +15,7 @@ import pygame
 import math
 from tkinter import *
 from tkinter import messagebox
-from aStar.aSolver import performAStar
+from aStar.aSolver import perform_a_star
 Tk().wm_withdraw()  # to hide the main Tkinter window
 
 
@@ -106,7 +106,7 @@ class game:  # main class
                 start_state = tuple(tuple(c) for c in self.carInfos)
 
                 # Berechne die Lösung
-                solution = performAStar(start_state)
+                solution = perform_a_star(start_state)
 
                 if solution:
                     messagebox.showinfo("Solver", f"Lösung gefunden in {len(solution) - 1} Zügen!\nStarte Animation...")

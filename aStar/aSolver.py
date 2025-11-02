@@ -102,7 +102,7 @@ def build_occupied_map(state):
     return occupied
 
 
-def performAStar(game_board):
+def perform_a_star(game_board):
     start = game_board
     open_set = [(heuristic(start), 0, start, [])]  # (f, g, state, path)
     visited = set()
@@ -122,7 +122,7 @@ def performAStar(game_board):
 
 if __name__ == "__main__":
     game = load_game("../games/game0.txt")
-    solution_path = performAStar(game)
+    solution_path = perform_a_star(game)
     if solution_path:
         print(f"Lösung gefunden in {len(solution_path)-1} Zügen.")
     else:
