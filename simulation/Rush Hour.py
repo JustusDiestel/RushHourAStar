@@ -12,12 +12,10 @@ https://www.pygame.org/docs/
 
 # imports libraries
 import pygame
-import sys
 import math
 from tkinter import *
 from tkinter import messagebox
-from aStar.aSolver import performAStar, load_game
-
+from aStar.aSolver import performAStar
 Tk().wm_withdraw()  # to hide the main Tkinter window
 
 
@@ -103,8 +101,6 @@ class game:  # main class
                                     'Rush Hour\nGet the red car to the end.\n Click and drag to control the cars.')
                 start = False
 
-                # === Automatische Lösung mit A* starten ===
-                from aStar.aSolver import performAStar, load_game
 
                 # Lade den Startzustand als Tupel
                 start_state = tuple(tuple(c) for c in self.carInfos)
@@ -281,11 +277,11 @@ class game:  # main class
             self.rectObjects.append(Rectangle(each[0], int(each[1]), int(each[2]), int(each[3])))
 
     def gameOver(self):  # if game is won
-        if self.rectObjects[
-            0].startX == 320:  # checks if starting coordinate of first car is at the winning position or not
+        winning_x = 480 - (self.rectObjects[0].extendX)
+        if self.rectObjects[0].startX == winning_x:
             messagebox.showinfo('Congratulations!',
-                                'You have completed the game!\nYou did it in %d moves!' % self.turns)  # victory popup
-            self.inGame = False  # cut the loop
+                                f'You have completed the game!\nYou did it in {self.turns} moves!')
+            self.inGame = False
 
     def updateBoard(self, state):
         for i, (orientation, size, row, column) in enumerate(state):

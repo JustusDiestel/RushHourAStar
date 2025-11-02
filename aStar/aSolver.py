@@ -1,4 +1,4 @@
-def load_game(path):
+def load_game(path): # hier laden wir das spielfeld rein
     game_board = []
     with open(path) as file:
         for line in file:
@@ -7,12 +7,12 @@ def load_game(path):
                 game_board.append((orientation, lenght, row, col))
     return tuple(game_board)
 
-def goal_reached(game_board):
+def goal_reached(game_board): # wenn rotes Auto rechts berührt - fertig
     orientation, length, row, col = game_board[0]
     return int(col) + int(length) == 6
 
 def heuristic(state):
-    # Heuristic: distance of red car to exit + number of blocking cars
+    # blockierende autos + abstand zum ziel ist unsere heuristik
     red_car = state[0]
     orientation, length, row, col = red_car
     col = int(col)
@@ -20,19 +20,8 @@ def heuristic(state):
     distance_to_exit = 6 - (col + length)
     blocking_cars = 0
     # Positions occupied by cars
-    occupied = set()
-    for car in state:
-        o, l, r, c = car
-        l = int(l)
-        r = int(r)
-        c = int(c)
-        if o == 'h':
-            for i in range(c, c + l):
-                occupied.add((r, i))
-        else:
-            for i in range(r, r + l):
-                occupied.add((i, c))
-    # Count blocking cars in path of red car to exit
+    occupied = build_occupied_map(state)
+
     for pos_col in range(col + length, 6):
         if (int(row), pos_col) in occupied:
             blocking_cars += 1
@@ -40,47 +29,23 @@ def heuristic(state):
 
 def get_successors(state):
     successors = []
-    occupied = set()
-    # Build occupied set for quick lookup
-    for car in state:
-        o, l, r, c = car
-        l = int(l)
-        r = int(r)
-        c = int(c)
-        if o == 'h':
-            for i in range(c, c + l):
-                occupied.add((r, i))
-        else:
-            for i in range(r, r + l):
-                occupied.add((i, c))
-    # For each car, try to move forward and backward along orientation
+    occupied = build_occupied_map(state)
+
     for idx, car in enumerate(state):
         o, l, r, c = car
         l = int(l)
         r = int(r)
         c = int(c)
         if o == 'h':
-            # Move left
-            new_c = c - 1
-            if new_c >= 0 and (r, new_c) not in occupied:
-                new_state = list(state)
-                new_state[idx] = (o, str(l), str(r), str(new_c))
-                successors.append(tuple(new_state))
-            # Move right
-            new_c = c + l
-            if new_c < 6 and (r, new_c) not in occupied:
-                new_state = list(state)
-                new_state[idx] = (o, str(l), str(r), str(c + 1))
-                successors.append(tuple(new_state))
+            create_new_successor_h(successors,occupied, idx, o, l, r, c, state)
+
         else:
-            # Vertical car
-            # Move up
+            create_new_successor_r(successors,occupied, idx, o, l, r, c, state)
             new_r = r - 1
             if new_r >= 0 and (new_r, c) not in occupied:
                 new_state = list(state)
                 new_state[idx] = (o, str(l), str(new_r), str(c))
                 successors.append(tuple(new_state))
-            # Move down
             new_r = r + l
             if new_r < 6 and (new_r, c) not in occupied:
                 new_state = list(state)
@@ -89,6 +54,53 @@ def get_successors(state):
     return successors
 
 import heapq
+
+def create_new_successor_r(successors, occupied, idx, o, l, r, c, state):
+    for target_r in range(r - 1, -1, -1):
+        if (target_r, c) in occupied:
+            break
+        new_state = list(state)
+        new_state[idx] = (o, str(l), str(target_r), str(c))
+        successors.append(tuple(new_state))
+
+    for target_r in range(r + 1, 6 - l + 1):  # <= hier 6 - l + 1
+        if (target_r + l - 1, c) in occupied:
+            break
+        new_state = list(state)
+        new_state[idx] = (o, str(l), str(target_r), str(c))
+        successors.append(tuple(new_state))
+
+def create_new_successor_h(successors, occupied, idx, o, l, r, c, state):
+    for target_c in range(c - 1, -1, -1):
+        if (r, target_c) in occupied:
+            break
+        new_state = list(state)
+        new_state[idx] = (o, str(l), str(r), str(target_c))
+        successors.append(tuple(new_state))
+
+    for target_c in range(c + 1, 6 - l + 1):
+        if (r, target_c + l - 1) in occupied:
+            break
+        new_state = list(state)
+        new_state[idx] = (o, str(l), str(r), str(target_c))
+        successors.append(tuple(new_state))
+
+
+def build_occupied_map(state):
+    occupied = set()
+    for car in state:
+        o, l, r, c = car
+        l = int(l)
+        r = int(r)
+        c = int(c)
+        if o == 'h':
+            for i in range(c, c + l):
+                occupied.add((r, i))
+        else:
+            for i in range(r, r + l):
+                occupied.add((i, c))
+    return occupied
+
 
 def performAStar(game_board):
     start = game_board
