@@ -15,7 +15,8 @@ import pygame
 import math
 from tkinter import *
 from tkinter import messagebox
-from aStar.aSolver import perform_a_star
+from aStar.aSolver import perform_a_star, advanced_heuristic
+
 Tk().wm_withdraw()  # to hide the main Tkinter window
 
 
@@ -106,7 +107,8 @@ class game:  # main class
                 start_state = tuple(tuple(c) for c in self.carInfos)
 
                 # Berechne die Lösung
-                solution = perform_a_star(start_state)
+                solution, expanded = perform_a_star(start_state, advanced_heuristic)
+                self.playSolution(solution)
 
                 if solution:
                     messagebox.showinfo("Solver", f"Lösung gefunden in {len(solution) - 1} Zügen!\nStarte Animation...")
@@ -260,7 +262,7 @@ class game:  # main class
 
     def loadGame(self):  # reading the file
         self.carInfos = []  # list of car information
-        filename = str("../games/hardest.txt")  # get 2nd file
+        filename = str("../games/game1.txt")  # get 2nd file
         file = open(filename, 'r')  # open it
         lines = file.readlines()  # save the file to a list
 

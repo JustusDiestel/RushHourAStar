@@ -176,16 +176,17 @@ def perform_a_star(start_state, HeuristicParam):
     HEURISTIC = HeuristicParam
     open_set = [(HEURISTIC(start_state), 0, start_state, [])]
     visited = set()
-
+    expanded_states = 0
     while open_set:
         f, g, state, path = heapq.heappop(open_set)
 
         if state in visited:
             continue
         visited.add(state)
+        expanded_states += 1
 
         if goal_reached(state):
-            return path + [state]
+            return path + [state], expanded_states
 
         for succ in get_successors(state):
             if succ not in visited:
@@ -197,10 +198,42 @@ def perform_a_star(start_state, HeuristicParam):
 
 
 if __name__ == "__main__":
-    start = load_game("../games/hardest.txt")
-    HEURISTIC = advanced_heuristic  # oder distance_heuristic / zero_heuristic
-    sol = perform_a_star(start, HEURISTIC)
+
+    start = load_game("../games/game1.txt")
+
+
+    HEURISTIC = advanced_heuristic
+    start_time = time.perf_counter()
+    sol, nr_expanded = perform_a_star(start, HEURISTIC)
+    end_time = time.perf_counter()
+    print("Heuristik:", HEURISTIC.__name__)
     if sol:
         print("Lösung in", len(sol) - 1, "Zügen.")
+        print("Zeit:", end_time - start_time, "Sekunden")
+        print("Expanded States:", nr_expanded)
+    else:
+        print("Keine Lösung gefunden.")
+
+    HEURISTIC = zero_heuristic
+    start_time = time.perf_counter()
+    sol, nr_expanded = perform_a_star(start, HEURISTIC)
+    end_time = time.perf_counter()
+    print("Heuristik:", HEURISTIC.__name__)
+    if sol:
+        print("Lösung in", len(sol) - 1, "Zügen.")
+        print("Zeit:", end_time - start_time, "Sekunden")
+        print("Expanded States:", nr_expanded)
+    else:
+        print("Keine Lösung gefunden.")
+
+    HEURISTIC = distance_heuristic
+    start_time = time.perf_counter()
+    sol, nr_expanded = perform_a_star(start, HEURISTIC)
+    end_time = time.perf_counter()
+    print("Heuristik:", HEURISTIC.__name__)
+    if sol:
+        print("Lösung in", len(sol) - 1, "Zügen.")
+        print("Zeit:", end_time - start_time, "Sekunden")
+        print("Expanded States:", nr_expanded)
     else:
         print("Keine Lösung gefunden.")
