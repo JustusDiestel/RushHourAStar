@@ -260,7 +260,7 @@ class game:  # main class
 
     def loadGame(self):  # reading the file
         self.carInfos = []  # list of car information
-        filename = str("../games/auto_game_3.txt")  # get 2nd file
+        filename = str("../games/hardest.txt")  # get 2nd file
         file = open(filename, 'r')  # open it
         lines = file.readlines()  # save the file to a list
 
