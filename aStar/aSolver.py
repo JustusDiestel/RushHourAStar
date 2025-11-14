@@ -53,6 +53,7 @@ def exit_strategie(state, blocking_id):
         if moves_up is not None:
             strategies.append(moves_up)
 
+
         moves_down = blocking_cars_in_direction(occupied, r + l, c, step=1)
         if moves_down is not None:
             strategies.append(moves_down)
