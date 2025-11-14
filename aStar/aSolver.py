@@ -1,8 +1,6 @@
 import heapq
+import time
 
-
-
-# Spielfeld laden
 def load_game(path):
     game_board = []
     with open(path) as file:
@@ -13,13 +11,12 @@ def load_game(path):
     return tuple(game_board)
 
 
-# Ziel erreicht?
+# Ziel
 def goal_reached(state):
     o, l, r, c = state[0]
     return int(c) + int(l) == 6
 
 
-# Occupied-Map machen
 def build_occupied_map(state):
     occupied = set()
     for o, l, r, c in state:
@@ -35,29 +32,25 @@ def build_occupied_map(state):
     return occupied
 
 
-# Auto an Position finden
+# Car at position
 def find_car_at_pos(state, row, col):
     row = int(row)
     col = int(col)
-
     for i, (o, l, r, c) in enumerate(state):
         l = int(l)
         r = int(r)
         c = int(c)
-
         if o == "h" and row == r and c <= col < c + l:
             return i
         if o == "v" and col == c and r <= row < r + l:
             return i
-
     return None
 
 
-# Blocker in Richtung zählen (bis erstes freies Feld)
+# Blocking cars in direction until free field
 def blocking_cars_in_direction(state, r, c, step_r, step_c):
     occupied = build_occupied_map(state)
     cost = 0
-
     while 0 <= r < 6 and 0 <= c < 6:
         if (r, c) in occupied:
             cost += 1
@@ -65,11 +58,10 @@ def blocking_cars_in_direction(state, r, c, step_r, step_c):
             c += step_c
         else:
             break
-
     return cost
 
 
-# Exit-Strategie für Auto bestimmen
+# Exit-Strategy for one blocking car
 def exit_strategie(state, idx):
     o, l, r, c = state[idx]
     l = int(l)
@@ -79,20 +71,41 @@ def exit_strategie(state, idx):
     strategies = []
 
     if o == "v":
-        # nach oben
         strategies.append(blocking_cars_in_direction(state, r - 1, c, -1, 0))
-        # nach unten
         strategies.append(blocking_cars_in_direction(state, r + l, c, 1, 0))
     else:
-        # nach links
         strategies.append(blocking_cars_in_direction(state, r, c - 1, 0, -1))
-        # nach rechts
         strategies.append(blocking_cars_in_direction(state, r, c + l, 0, 1))
 
     return min(strategies)
 
 
-# Advanced-Heuristic
+# Heuristik 1: zero
+def zero_heuristic(state):
+    return 0
+
+
+# Heuristik 2: distance + blocking count
+def distance_heuristic(state):
+    red = state[0]
+    o, l, r, c = red
+    l = int(l)
+    r = int(r)
+    c = int(c)
+
+    distance_to_exit = 6 - (c + l)
+
+    occupied = build_occupied_map(state)
+    blocking = 0
+
+    for col in range(c + l, 6):
+        if (r, col) in occupied:
+            blocking += 1
+
+    return distance_to_exit + blocking
+
+
+# Heuristik 3: advanced heuristic
 def advanced_heuristic(state):
     red = state[0]
     o, l, r, c = red
@@ -101,19 +114,17 @@ def advanced_heuristic(state):
     c = int(c)
 
     occupied = build_occupied_map(state)
-    heuristic_sum = 0
+    hsum = 0
 
-    # Felder rechts vom roten Auto
-    for pos_c in range(c + l, 6):
-        if (r, pos_c) in occupied:
-            blocking_idx = find_car_at_pos(state, r, pos_c)
-            heuristic_sum += exit_strategie(state, blocking_idx)
+    for col in range(c + l, 6):
+        if (r, col) in occupied:
+            bid = find_car_at_pos(state, r, col)
+            hsum += exit_strategie(state, bid)
 
-    # +1 final move of red car
-    return heuristic_sum + 1
+    return hsum + 1
 
 
-# Successor-Generierung
+# Successors
 def get_successors(state):
     successors = []
     occupied = build_occupied_map(state)
@@ -123,7 +134,6 @@ def get_successors(state):
         r = int(r)
         c = int(c)
 
-        # horizontal
         if o == "h":
             # links
             cc = c - 1
@@ -142,7 +152,6 @@ def get_successors(state):
                 cc += 1
 
         else:
-            # vertikal
             # oben
             rr = r - 1
             while rr >= 0 and (rr, c) not in occupied:
@@ -163,8 +172,9 @@ def get_successors(state):
 
 
 # A*
-def perform_a_star(start_state):
-    open_set = [(advanced_heuristic(start_state), 0, start_state, [])]
+def perform_a_star(start_state, HeuristicParam):
+    HEURISTIC = HeuristicParam
+    open_set = [(HEURISTIC(start_state), 0, start_state, [])]
     visited = set()
 
     while open_set:
@@ -180,18 +190,17 @@ def perform_a_star(start_state):
         for succ in get_successors(state):
             if succ not in visited:
                 new_g = g + 1
-                new_f = new_g + advanced_heuristic(succ)
+                new_f = new_g + HEURISTIC(succ)
                 heapq.heappush(open_set, (new_f, new_g, succ, path + [state]))
 
     return None
 
 
-
 if __name__ == "__main__":
-    game = load_game("../games/hardest.txt")
-    solution = perform_a_star(game)
-
-    if solution:
-        print("Lösung in", len(solution) - 1, "Zügen.")
+    start = load_game("../games/hardest.txt")
+    HEURISTIC = advanced_heuristic  # oder distance_heuristic / zero_heuristic
+    sol = perform_a_star(start, HEURISTIC)
+    if sol:
+        print("Lösung in", len(sol) - 1, "Zügen.")
     else:
-        print("Keine Lösung.")
+        print("Keine Lösung gefunden.")
