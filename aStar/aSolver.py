@@ -50,14 +50,20 @@ def find_car_at_pos(state, row, col):
 # Blocking cars in direction until free field
 def blocking_cars_in_direction(state, r, c, step_r, step_c):
     occupied = build_occupied_map(state)
+    counted = set()  # Auto nicht doppelt zählen
     cost = 0
+
     while 0 <= r < 6 and 0 <= c < 6:
         if (r, c) in occupied:
-            cost += 1
-            r += step_r
-            c += step_c
+            bid = find_car_at_pos(state, r, c)
+            if bid not in counted:
+                counted.add(bid)
+                cost += 1
         else:
             break
+        r += step_r
+        c += step_c
+
     return cost
 
 
@@ -68,16 +74,15 @@ def exit_strategie(state, idx):
     r = int(r)
     c = int(c)
 
-    strategies = []
-
     if o == "v":
-        strategies.append(blocking_cars_in_direction(state, r - 1, c, -1, 0))
-        strategies.append(blocking_cars_in_direction(state, r + l, c, 1, 0))
-    else:
-        strategies.append(blocking_cars_in_direction(state, r, c - 1, 0, -1))
-        strategies.append(blocking_cars_in_direction(state, r, c + l, 0, 1))
+        up_cost = blocking_cars_in_direction(state, r - 1, c, -1, 0)
+        down_cost = blocking_cars_in_direction(state, r + l, c, 1, 0)
+        return min(up_cost, down_cost)
 
-    return min(strategies)
+    else:  # horizontal
+        left_cost = blocking_cars_in_direction(state, r, c - 1, 0, -1)
+        right_cost = blocking_cars_in_direction(state, r, c + l, 0, 1)
+        return min(left_cost, right_cost)
 
 
 # Heuristik 1: zero
@@ -114,15 +119,24 @@ def advanced_heuristic(state):
     c = int(c)
 
     occupied = build_occupied_map(state)
-    hsum = 0
 
+    distance_to_exit = 6 - (c + l)
+
+    hsum = 0
     for col in range(c + l, 6):
         if (r, col) in occupied:
             bid = find_car_at_pos(state, r, col)
-            hsum += exit_strategie(state, bid)
 
-    return hsum + 1
+            # Basis: 1 Auto blockiert
+            cost = 1
 
+            # Zusatzkosten: dieses Auto ist selbst blockiert
+            extra = exit_strategie(state, bid)
+            cost += extra
+
+            hsum += cost
+
+    return distance_to_exit + hsum
 
 # Successors
 def get_successors(state):
@@ -199,7 +213,7 @@ def perform_a_star(start_state, HeuristicParam):
 
 if __name__ == "__main__":
 
-    start = load_game("../games/game1.txt")
+    start = load_game("../games/hardest.txt")
 
 
     HEURISTIC = advanced_heuristic
